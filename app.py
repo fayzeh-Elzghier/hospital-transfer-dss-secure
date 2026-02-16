@@ -62,7 +62,7 @@ if st.button("Analyze + Recommend", type="primary"):
 
     # --- Hackathon-style outputs ---
     st.divider()
-    st.subheader("Decision Output (Hackathon Style)")
+    st.subheader("Decision Output ")
 
     ranked = rank_hospitals(hospitals, required_spec, severity, top_k=5)
     best = ranked.iloc[0]
