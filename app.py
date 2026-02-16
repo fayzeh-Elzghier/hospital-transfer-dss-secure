@@ -12,13 +12,36 @@ st.caption("Synthetic demo: report analysis + hospital ranking (no real patient 
 
 # Sidebar controls
 st.sidebar.header("Demo Controls")
+
+# --- Reference location (sender/patient) controls ---
+st.sidebar.subheader("Reference Location (for distance_km)")
+
+# Simple preset locations (approx) for demo
+LOCATIONS = {
+    "Hebron": (31.5326, 35.0998),
+    "Ramallah": (31.9038, 35.2034),
+    "Nablus": (32.2211, 35.2544),
+    "Jerusalem": (31.7683, 35.2137),
+    "Gaza": (31.5017, 34.4668),
+    "Custom": None
+}
+
+loc_choice = st.sidebar.selectbox("Choose location", list(LOCATIONS.keys()), index=1)
+
+if loc_choice != "Custom":
+    ref_lat, ref_lon = LOCATIONS[loc_choice]
+    st.sidebar.caption(f"Using {loc_choice}: lat={ref_lat:.4f}, lon={ref_lon:.4f}")
+else:
+    ref_lat = st.sidebar.number_input("ref_lat (latitude)", value=31.9038, format="%.6f")
+    ref_lon = st.sidebar.number_input("ref_lon (longitude)", value=35.2034, format="%.6f")
+
 seed_h = st.sidebar.number_input("Hospitals seed", min_value=1, max_value=9999, value=7)
 seed_t = st.sidebar.number_input("Transfers seed", min_value=1, max_value=9999, value=13)
 n_h = st.sidebar.slider("Number of hospitals", 5, 15, 8)
 n_t = st.sidebar.slider("Synthetic training cases", 50, 400, 120)
 
-# Generate synthetic data
-hospitals = generate_hospitals(n=n_h, seed=int(seed_h))
+# Generate synthetic data (distance_km now computed from ref_lat/ref_lon)
+hospitals = generate_hospitals(n=n_h, seed=int(seed_h), ref_lat=float(ref_lat), ref_lon=float(ref_lon))
 transfers = generate_transfers(n=n_t, seed=int(seed_t))
 
 # Fit analyzer
@@ -62,7 +85,7 @@ if st.button("Analyze + Recommend", type="primary"):
 
     # --- Hackathon-style outputs ---
     st.divider()
-    st.subheader("Decision Output ")
+    st.subheader("Decision Output")
 
     ranked = rank_hospitals(hospitals, required_spec, severity, top_k=5)
     best = ranked.iloc[0]
@@ -100,3 +123,5 @@ if st.button("Analyze + Recommend", type="primary"):
     st.subheader("Hospitals Map (Synthetic)")
     map_df = hospitals.rename(columns={"lat": "latitude", "lon": "longitude"})
     st.map(map_df[["latitude", "longitude"]])
+
+    st.caption(f"Reference location used for distance_km: {loc_choice} (lat={float(ref_lat):.4f}, lon={float(ref_lon):.4f})")
